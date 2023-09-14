@@ -1,4 +1,4 @@
-name: Deploy to Cloudflare Worker
+name: Deploy Subscene API to Cloudflare Worker
 
 on:
   push:
