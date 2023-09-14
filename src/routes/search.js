@@ -1,23 +1,42 @@
 import { Hono } from "hono";
+import cheerio from "cheerio";
+import apiRequestRawHtml from "../helpers/apiRequestRawHtml";
 
-const baseUrl = "https://subscene.com";
 const search = new Hono();
 
-search.get("/search", async (c) => {
-  const query = c.req.query("q");
+const baseUrl = "https://subscene.com";
+
+search.get("/", async (c) => {
   try {
-    if (!query) {
+    const query = c.req.query("q");
+    console.log(query);
+    if (!query.length) {
       throw new Error("Query Is Empty");
     }
     const url = `${baseUrl}/subtitles/searchbytitle?query=${query}`;
-    const response = await fetch(url);
+    const body = await apiRequestRawHtml(url); // Use apiRequestJson here
+    const $ = cheerio.load(body);
 
-    if (!response.ok) {
-      throw new Error("Error while fetching data");
-    }
+    const results = {};
 
-    const text = await response.text();
-    const results = parseHTML(text);
+    $(".byTitle .search-result h2").each((i, h2) => {
+      const ulName = $(h2).text().trim();
+      const ul = $(h2).next("ul");
+
+      results[ulName] = [];
+
+      ul.find("li").each((j, li) => {
+        const titleDiv = $(li).find(".title");
+        const path = titleDiv.find("a").attr("href");
+        const title = titleDiv.find("a").text().trim();
+        const count = $(li).find(".subtle.count").text().trim();
+        results[ulName].push({ path, title, count });
+      });
+
+      if (results[ulName].length === 0) {
+        delete results[ulName];
+      }
+    });
 
     if (Object.keys(results).length === 0) {
       return c.json({
@@ -36,41 +55,6 @@ search.get("/search", async (c) => {
 });
 
 export default search;
-
-function parseHTML(html) {
-  const results = {};
-
-  const regex = /<h2 class="[^"]+">([^<]+)<\/h2>[\s\S]*?<ul>([\s\S]*?)<\/ul>/g;
-  let match;
-  while ((match = regex.exec(html)) !== null) {
-    const ulName = match[1].trim();
-    const ul = match[2];
-
-    results[ulName] = [];
-
-    const liRegex = /<li>([\s\S]*?)<\/li>/g;
-    let liMatch;
-    while ((liMatch = liRegex.exec(ul)) !== null) {
-      const liText = liMatch[1];
-      const pathMatch = /<a href="([^"]+)">/.exec(liText);
-      const titleMatch = /<a[^>]+>([^<]+)<\/a>/.exec(liText);
-      const countMatch = /<span class="subtle count">([^<]+)<\/span>/.exec(liText);
-
-      if (pathMatch && titleMatch && countMatch) {
-        const path = pathMatch[1];
-        const title = titleMatch[1].trim();
-        const count = countMatch[1].trim();
-        results[ulName].push({ path, title, count });
-      }
-    }
-
-    if (results[ulName].length === 0) {
-      delete results[ulName];
-    }
-  }
-
-  return results;
-}
 
 function cleanUpResults(obj) {
   for (const key in obj) {

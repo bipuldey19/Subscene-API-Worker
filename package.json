@@ -1,0 +1,38 @@
+{
+  "name": "subscene-api-worker",
+  "version": "1.0.0",
+  "description": "An unofficial API for subscene for searching and downloading subtitles easily...",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "wrangler dev src/index.js --port 3000",
+    "publish": "wrangler deploy src/index.js",
+    "start": "wrangler dev src/index.js --port 3000"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bipuldey19/subscene-unofficial-api.git"
+  },
+  "keywords": [
+    "subscene",
+    "subtitles",
+    "api",
+    "unofficial",
+    "subtitle",
+    "subscene-api",
+    "subscene-unofficial-api"
+  ],
+  "author": "https://github.com/bipuldey19",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/bipuldey19/subscene-unofficial-api/issues"
+  },
+  "homepage": "https://github.com/bipuldey19/subscene-unofficial-api#readme",
+  "devDependencies": {
+    "wrangler": "^3.7.0"
+  },
+  "dependencies": {
+    "adm-zip": "^0.5.10",
+    "cheerio": "^1.0.0-rc.12",
+    "hono": "^3.6.0"
+  }
+}
